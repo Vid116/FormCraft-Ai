@@ -50,6 +50,9 @@ function isFieldEmpty(field: FormField, val: unknown): boolean {
   if (field.type === "rating") {
     return !(val && typeof val === "object" && (val as { score: number }).score != null);
   }
+  if (field.type === "file_upload") {
+    return !(val && typeof val === "object" && (val as { url: string }).url);
+  }
   return !val;
 }
 
@@ -378,6 +381,7 @@ export function PublicFormRenderer({ form, trackingParams }: { form: Form; track
                   value={answers[currentField.id]}
                   onChange={(val) => updateAnswer(currentField.id, val)}
                   onSubmit={goNext}
+                  formId={form.id}
                 />
               </div>
 
@@ -478,11 +482,13 @@ function StepFieldRenderer({
   value,
   onChange,
   onSubmit,
+  formId,
 }: {
   field: FormField;
   value: unknown;
   onChange: (val: unknown) => void;
   onSubmit: () => void;
+  formId: string;
 }) {
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
@@ -701,31 +707,92 @@ function StepFieldRenderer({
     );
   }
 
-  // File upload
+  // File upload — uploads to Supabase Storage
   if (field.type === "file_upload") {
+    const fileVal = value as { name: string; url: string } | null;
+    const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState("");
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+    async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      if (file.size > MAX_FILE_SIZE) {
+        setUploadError("File must be under 10MB");
+        return;
+      }
+
+      setUploading(true);
+      setUploadError("");
+
+      try {
+        const supabase = createClient();
+        const ext = file.name.split(".").pop() ?? "bin";
+        const path = `${formId}/${field.id}/${Date.now()}.${ext}`;
+
+        const { error: uploadErr } = await supabase.storage
+          .from("form-uploads")
+          .upload(path, file);
+
+        if (uploadErr) throw uploadErr;
+
+        const { data: urlData } = supabase.storage
+          .from("form-uploads")
+          .getPublicUrl(path);
+
+        onChange({ name: file.name, url: urlData.publicUrl });
+      } catch {
+        setUploadError("Upload failed. Please try again.");
+      } finally {
+        setUploading(false);
+      }
+    }
+
     return (
-      <label className="block cursor-pointer">
-        <div className={`flex flex-col items-center justify-center py-12 rounded-2xl border-2 border-dashed transition-all duration-300 ${
-          value ? "border-emerald-400/50 bg-emerald-500/10" : "border-white/15 bg-white/5 hover:bg-white/8 hover:border-white/25"
-        }`}>
-          {value ? (
-            <>
-              <svg className="w-8 h-8 text-emerald-400 mb-2 fc-pop-in" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span className="text-white/70 text-sm">{value as string}</span>
-            </>
-          ) : (
-            <>
-              <svg className="w-8 h-8 text-white/30 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              <span className="text-white/40 text-sm">Click to upload a file</span>
-            </>
-          )}
-        </div>
-        <input type="file" className="hidden" onChange={(e) => onChange(e.target.files?.[0]?.name ?? "")} />
-      </label>
+      <div>
+        <label className="block cursor-pointer">
+          <div className={`flex flex-col items-center justify-center py-12 rounded-2xl border-2 border-dashed transition-all duration-300 ${
+            fileVal ? "border-emerald-400/50 bg-emerald-500/10" : uploading ? "border-blue-400/50 bg-blue-500/10" : "border-white/15 bg-white/5 hover:bg-white/8 hover:border-white/25"
+          }`}>
+            {uploading ? (
+              <>
+                <svg className="w-8 h-8 text-blue-400 mb-2 animate-spin" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span className="text-white/50 text-sm">Uploading...</span>
+              </>
+            ) : fileVal ? (
+              <>
+                <svg className="w-8 h-8 text-emerald-400 mb-2 fc-pop-in" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-white/70 text-sm">{fileVal.name}</span>
+                <button
+                  type="button"
+                  onClick={(ev) => { ev.preventDefault(); onChange(null); }}
+                  className="mt-2 text-xs text-white/30 hover:text-red-400 transition-colors"
+                >
+                  Remove file
+                </button>
+              </>
+            ) : (
+              <>
+                <svg className="w-8 h-8 text-white/30 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <span className="text-white/40 text-sm">Click to upload a file</span>
+                <span className="text-white/20 text-xs mt-1">Max 10MB</span>
+              </>
+            )}
+          </div>
+          {!fileVal && !uploading && <input type="file" className="hidden" onChange={handleFileSelect} />}
+        </label>
+        {uploadError && (
+          <p className="mt-2 text-xs text-red-400">{uploadError}</p>
+        )}
+      </div>
     );
   }
 

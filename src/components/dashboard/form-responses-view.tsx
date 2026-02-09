@@ -115,6 +115,9 @@ function formatAnswer(field: FormField, val: unknown): string {
     const r = val as { score: number; comment?: string };
     return r.comment ? `${r.score} — "${r.comment}"` : String(r.score);
   }
+  if (val && typeof val === "object" && "url" in (val as Record<string, unknown>)) {
+    return (val as { name: string }).name ?? "File";
+  }
   if (Array.isArray(val)) return (val as string[]).join(", ");
   return String(val);
 }
@@ -179,6 +182,9 @@ export function FormResponsesView({ form, responses: initialResponses }: { form:
         if (val && typeof val === "object" && "score" in (val as Record<string, unknown>)) {
           const r = val as { score: number; comment?: string };
           return r.comment ? `${r.score} - ${r.comment}` : String(r.score);
+        }
+        if (val && typeof val === "object" && "url" in (val as Record<string, unknown>)) {
+          return (val as { url: string }).url;
         }
         if (Array.isArray(val)) return val.join("; ");
         return String(val ?? "");
@@ -549,6 +555,24 @@ function ResponseFieldDisplay({ field, answer }: { field: FormField; answer: unk
           <p className="text-sm text-zinc-600 dark:text-zinc-400 italic mt-1">&ldquo;{r.comment}&rdquo;</p>
         )}
       </div>
+    );
+  }
+
+  // File upload — download link
+  if (field.type === "file_upload" && typeof answer === "object" && "url" in (answer as Record<string, unknown>)) {
+    const f = answer as { name: string; url: string };
+    return (
+      <a
+        href={f.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        {f.name}
+      </a>
     );
   }
 
