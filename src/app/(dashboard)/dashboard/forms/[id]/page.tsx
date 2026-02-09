@@ -5,6 +5,7 @@ import { FormResponsesView } from "@/components/dashboard/form-responses-view";
 import { PublishToggle } from "@/components/dashboard/publish-toggle";
 import { QRCodeDisplay } from "@/components/dashboard/qr-code";
 import { DuplicateFormButton } from "@/components/dashboard/duplicate-form-button";
+import { TrackedLinkGenerator } from "@/components/dashboard/tracked-link-generator";
 import type { Form, FormResponse } from "@/lib/types/form";
 
 export default async function FormDetailPage({
@@ -81,6 +82,20 @@ export default async function FormDetailPage({
           <QRCodeDisplay url={publicUrl} />
         </div>
       )}
+
+      {/* Tracked link generator — only for published tracked forms */}
+      {typedForm.is_published &&
+        typedForm.settings.survey_mode === "tracked" &&
+        typedForm.settings.tracking_fields &&
+        typedForm.settings.tracking_fields.length > 0 && (
+          <div className="mb-6">
+            <TrackedLinkGenerator
+              formId={typedForm.id}
+              baseUrl={publicUrl}
+              trackingFields={typedForm.settings.tracking_fields}
+            />
+          </div>
+        )}
 
       <FormResponsesView
         form={typedForm}

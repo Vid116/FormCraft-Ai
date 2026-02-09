@@ -15,6 +15,9 @@ export default function NewFormPage() {
   const [welcomeDescription, setWelcomeDescription] = useState("");
   const [submitMessage, setSubmitMessage] = useState("");
   const [fields, setFields] = useState<FormField[]>([]);
+  const [surveyMode, setSurveyMode] = useState<"anonymous" | "tracked">("anonymous");
+  const [trackingFields, setTrackingFields] = useState<string[]>([]);
+  const [newTrackingField, setNewTrackingField] = useState("");
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -73,6 +76,8 @@ export default function NewFormPage() {
           welcome_title: welcomeTitle,
           welcome_description: welcomeDescription,
           submit_message: submitMessage,
+          survey_mode: surveyMode,
+          tracking_fields: surveyMode === "tracked" ? trackingFields : [],
         },
         is_published: false,
         response_count: 0,
@@ -216,6 +221,102 @@ export default function NewFormPage() {
 
       {/* Form fields editor */}
       <FormEditor fields={fields} onChange={setFields} />
+
+      {/* Survey Mode */}
+      <div className="mt-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5">
+        <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-3 flex items-center gap-2">
+          <svg className="w-4 h-4 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+          Survey Mode
+        </h3>
+        <div className="flex gap-3 mb-4">
+          <button
+            type="button"
+            onClick={() => setSurveyMode("anonymous")}
+            className={`flex-1 p-3 rounded-lg border-2 text-left transition-all ${
+              surveyMode === "anonymous"
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30"
+                : "border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600"
+            }`}
+          >
+            <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Anonymous</div>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">One link for everyone. No tracking.</p>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSurveyMode("tracked")}
+            className={`flex-1 p-3 rounded-lg border-2 text-left transition-all ${
+              surveyMode === "tracked"
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30"
+                : "border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600"
+            }`}
+          >
+            <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Tracked</div>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Unique links per case/agent. Trace every response.</p>
+          </button>
+        </div>
+
+        {surveyMode === "tracked" && (
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2">
+              Tracking parameters
+            </label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {trackingFields.map((f) => (
+                <span
+                  key={f}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 rounded-lg text-xs font-medium"
+                >
+                  {f}
+                  <button
+                    type="button"
+                    onClick={() => setTrackingFields(trackingFields.filter((t) => t !== f))}
+                    className="hover:text-red-500 ml-0.5"
+                  >
+                    &times;
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                value={newTrackingField}
+                onChange={(e) => setNewTrackingField(e.target.value.replace(/[^a-zA-Z0-9_]/g, ""))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const name = newTrackingField.trim().toLowerCase();
+                    if (name && !trackingFields.includes(name)) {
+                      setTrackingFields([...trackingFields, name]);
+                      setNewTrackingField("");
+                    }
+                  }
+                }}
+                className="flex-1 px-3 py-1.5 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                placeholder="e.g. case_id, agent_name"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const name = newTrackingField.trim().toLowerCase();
+                  if (name && !trackingFields.includes(name)) {
+                    setTrackingFields([...trackingFields, name]);
+                    setNewTrackingField("");
+                  }
+                }}
+                className="px-3 py-1.5 text-sm bg-violet-600 hover:bg-violet-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Add
+              </button>
+            </div>
+            <p className="text-xs text-zinc-400 mt-2">
+              These become URL parameters. Example: /f/id?case_id=123&agent_name=John
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Submit message settings */}
       <div className="mt-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5">

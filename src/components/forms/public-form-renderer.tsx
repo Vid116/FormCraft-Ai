@@ -113,7 +113,7 @@ function useSwipe(onSwipeUp: () => void, onSwipeDown: () => void) {
 }
 
 // ─── Main component ───
-export function PublicFormRenderer({ form }: { form: Form }) {
+export function PublicFormRenderer({ form, trackingParams }: { form: Form; trackingParams?: Record<string, string> }) {
   // -1 = welcome screen, 0+ = index into visibleFields
   const [step, setStep] = useState(-1);
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
@@ -218,12 +218,17 @@ export function PublicFormRenderer({ form }: { form: Form }) {
 
     try {
       const supabase = createClient();
-      const { error: insertError } = await supabase.from("responses").insert({
+      const insertPayload: Record<string, unknown> = {
         id: uuidv4(),
         form_id: form.id,
         answers,
         submitted_at: new Date().toISOString(),
-      });
+      };
+      // Include tracking metadata if form is tracked and params exist
+      if (trackingParams && Object.keys(trackingParams).length > 0) {
+        insertPayload.metadata = trackingParams;
+      }
+      const { error: insertError } = await supabase.from("responses").insert(insertPayload);
       if (insertError) throw insertError;
       await supabase.rpc("increment_response_count", { form_id_input: form.id });
       clearProgress(form.id);
@@ -326,7 +331,17 @@ export function PublicFormRenderer({ form }: { form: Form }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </button>
-              <p className="mt-8 text-xs text-white/25">
+              {/* Tracking context badge */}
+              {trackingParams && Object.keys(trackingParams).length > 0 && (
+                <div className="mt-8 inline-flex flex-wrap items-center gap-2 justify-center">
+                  {Object.entries(trackingParams).map(([key, val]) => (
+                    <span key={key} className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 text-xs text-white/50">
+                      {key.replace(/_/g, " ")}: <span className="text-white/70 font-medium">{val}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <p className="mt-4 text-xs text-white/25">
                 {totalSteps} questions &middot; Takes ~{Math.max(1, Math.ceil(totalSteps * 0.5))} min
               </p>
             </div>

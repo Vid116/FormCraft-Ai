@@ -69,6 +69,8 @@ export interface FormSettings {
   welcome_description: string;
   redirect_url?: string;
   notifications_email?: string;
+  survey_mode?: "anonymous" | "tracked";
+  tracking_fields?: string[];
 }
 
 export interface FormResponse {
@@ -76,10 +78,16 @@ export interface FormResponse {
   form_id: string;
   answers: Record<string, unknown>;
   submitted_at: string;
-  metadata?: {
-    ip?: string;
-    user_agent?: string;
-  };
+  metadata?: Record<string, string>;
+}
+
+export interface TrackedLink {
+  id: string;
+  short_code: string;
+  form_id: string;
+  params: Record<string, string>;
+  created_by: string | null;
+  created_at: string;
 }
 
 export interface AIFormGenerationRequest {
