@@ -6,6 +6,7 @@ import { PublishToggle } from "@/components/dashboard/publish-toggle";
 import { QRCodeDisplay } from "@/components/dashboard/qr-code";
 import { DuplicateFormButton } from "@/components/dashboard/duplicate-form-button";
 import { TrackedLinkGenerator } from "@/components/dashboard/tracked-link-generator";
+import { DeleteFormButton } from "@/components/dashboard/delete-form-button";
 import type { Form, FormResponse } from "@/lib/types/form";
 
 export default async function FormDetailPage({
@@ -66,6 +67,7 @@ export default async function FormDetailPage({
           >
             Edit
           </Link>
+          <DeleteFormButton formId={typedForm.id} formTitle={typedForm.title} />
         </div>
       </div>
 
