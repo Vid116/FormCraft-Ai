@@ -129,40 +129,6 @@ function clearProgress(formId: string) {
 }
 
 // ─── Swipe gesture hook ───
-function useSwipe(onSwipeUp: () => void, onSwipeDown: () => void) {
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
-
-  useEffect(() => {
-    // On touch-first devices, preserve native vertical scrolling.
-    if (window.matchMedia("(pointer: coarse)").matches) return;
-
-    function handleTouchStart(e: TouchEvent) {
-      const t = e.touches[0];
-      touchStart.current = { x: t.clientX, y: t.clientY };
-    }
-    function handleTouchEnd(e: TouchEvent) {
-      if (!touchStart.current) return;
-      const t = e.changedTouches[0];
-      const dx = t.clientX - touchStart.current.x;
-      const dy = t.clientY - touchStart.current.y;
-      const absDx = Math.abs(dx);
-      const absDy = Math.abs(dy);
-      // Only count vertical swipes with enough distance and more vertical than horizontal
-      if (absDy > 50 && absDy > absDx * 1.5) {
-        if (dy < 0) onSwipeUp();   // swipe up = next
-        else onSwipeDown();         // swipe down = back
-      }
-      touchStart.current = null;
-    }
-    window.addEventListener("touchstart", handleTouchStart, { passive: true });
-    window.addEventListener("touchend", handleTouchEnd, { passive: true });
-    return () => {
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchend", handleTouchEnd);
-    };
-  }, [onSwipeUp, onSwipeDown]);
-}
-
 // ─── Main component ───
 export function PublicFormRenderer({
   form,
@@ -306,16 +272,11 @@ export function PublicFormRenderer({
     return () => window.removeEventListener("keydown", handleKey);
   }, [goNext, goBack, submitted, submitting]);
 
-  // Touch swipe navigation (up = next, down = back)
-  const swipeNext = useCallback(() => { if (!submitted && !submitting) goNext(); }, [submitted, submitting, goNext]);
-  const swipeBack = useCallback(() => { if (!submitted) goBack(); }, [submitted, goBack]);
-  useSwipe(swipeNext, swipeBack);
-
   return (
     <div
       ref={containerRef}
       className="relative min-h-[100svh] overflow-x-hidden overflow-y-auto overscroll-y-contain transition-all duration-1000 ease-out"
-      style={{ background: getGradient(progress, submitted), WebkitOverflowScrolling: "touch" }}
+      style={{ background: getGradient(progress, submitted), WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
     >
       {/* Animated CSS */}
       <style>{formAnimationStyles}</style>
