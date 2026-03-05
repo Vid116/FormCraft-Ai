@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/toast";
 
 export function DeleteFormButton({ formId, formTitle }: { formId: string; formTitle: string }) {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   async function handleDelete() {
     setDeleting(true);
@@ -15,10 +17,11 @@ export function DeleteFormButton({ formId, formTitle }: { formId: string; formTi
       const supabase = createClient();
       const { error } = await supabase.from("forms").delete().eq("id", formId);
       if (error) throw error;
+      toast("Form deleted", "success");
       router.push("/dashboard");
       router.refresh();
     } catch {
-      alert("Failed to delete form. Please try again.");
+      toast("Failed to delete form. Please try again.", "error");
       setDeleting(false);
       setConfirming(false);
     }

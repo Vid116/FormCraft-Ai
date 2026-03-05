@@ -106,18 +106,54 @@ export default function LandingPage() {
             {
               name: "Free",
               price: "$0",
-              features: ["3 forms", "100 responses/mo", "Basic AI summary", "FormCraft branding"],
+              features: [
+                "1 active form",
+                "Unlimited responses",
+                "1 AI summary of responses/mo",
+                "4 AI-generated forms/mo",
+                "Forms are branded",
+              ],
             },
             {
               name: "Pro",
               price: "$19",
               popular: true,
-              features: ["Unlimited forms", "1,000 responses/mo", "Full AI insights", "Custom branding", "Email notifications"],
+              features: [
+                "Unlimited forms",
+                "Unlimited responses",
+                "20 AI summaries of responses/mo",
+                "Unlimited AI-generated forms",
+                "Customize form colors to match your brand",
+                "Conditional logic (show/hide questions)",
+                "QR code sharing",
+                "Form duplication",
+                "Email notifications",
+                "Password-protected forms",
+                "Email support",
+              ],
             },
             {
               name: "Business",
               price: "$49",
-              features: ["Everything in Pro", "10,000 responses/mo", "Team seats", "Integrations", "Priority support"],
+              features: [
+                "Everything in Pro, plus:",
+                "Unlimited AI summaries of responses",
+                "Remove branding",
+                "File upload fields",
+                "Tracked survey links (per agent, case, or campaign)",
+                "Custom redirect URL after submission",
+                "Custom subdomain (forms.yourcompany.com)",
+                "PDF export of AI summaries",
+                "CSV export of raw response data",
+                "Advanced analytics (trends, completion rates, drop-off)",
+                "Webhook integrations (Slack, Zapier)",
+                "API access",
+                "Team seats (10 included, more on request)",
+                "99.9% uptime SLA",
+                "Data retention & security compliance",
+                "Dedicated onboarding",
+                "Priority support",
+              ],
             },
           ].map((plan) => (
             <div
@@ -137,24 +173,30 @@ export default function LandingPage() {
                 <span className="text-zinc-500 dark:text-zinc-400 text-sm">/month</span>
               </div>
               <ul className="space-y-2">
-                {plan.features.map((f) => (
-                  <li key={f} className="text-sm text-zinc-600 dark:text-zinc-400 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {f}
-                  </li>
-                ))}
+                {plan.features.map((f) =>
+                  f.endsWith(":") ? (
+                    <li key={f} className="text-sm font-medium text-zinc-700 dark:text-zinc-300 pb-1">
+                      {f}
+                    </li>
+                  ) : (
+                    <li key={f} className="text-sm text-zinc-600 dark:text-zinc-400 flex items-center gap-2">
+                      <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      {f}
+                    </li>
+                  )
+                )}
               </ul>
               <Link
-                href="/signup"
+                href={plan.name === "Free" ? "/signup" : "/signup?plan=" + plan.name.toLowerCase()}
                 className={`block text-center mt-6 py-2 text-sm font-medium rounded-lg transition-colors ${
                   plan.popular
                     ? "bg-blue-600 hover:bg-blue-700 text-white"
                     : "border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
                 }`}
               >
-                Get started
+                {plan.name === "Free" ? "Get started" : "Start free trial"}
               </Link>
             </div>
           ))}
@@ -163,8 +205,21 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-zinc-100 dark:border-zinc-900 py-8">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-zinc-400">
-          FormCraft AI &mdash; Build smarter forms with AI
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-zinc-400">
+            FormCraft AI &mdash; Build smarter forms with AI
+          </p>
+          <div className="flex items-center gap-4 text-sm text-zinc-400">
+            <Link href="/privacy" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
+              Privacy
+            </Link>
+            <Link href="/terms" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
+              Terms
+            </Link>
+            <Link href="/cookies" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
+              Cookies
+            </Link>
+          </div>
         </div>
       </footer>
     </div>

@@ -4,9 +4,19 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { FormEditor } from "@/components/forms/form-editor";
+import { sha256 } from "@/lib/hash";
 import type { Form, FormField } from "@/lib/types/form";
+import type { PlanId } from "@/lib/stripe";
+import { hasFeatureAccess, getRequiredPlan } from "@/lib/features";
+import { UpgradePrompt } from "@/components/dashboard/upgrade-prompt";
 
-export function EditFormClient({ form }: { form: Form }) {
+export function EditFormClient({ form, plan = "free" }: { form: Form; plan?: PlanId }) {
+  const canThemeColor = hasFeatureAccess(plan, "theme_color");
+  const canHideBranding = hasFeatureAccess(plan, "hide_branding");
+  const canNotifications = hasFeatureAccess(plan, "email_notifications");
+  const canRedirectUrl = hasFeatureAccess(plan, "redirect_url");
+  const canTrackedLinks = hasFeatureAccess(plan, "tracked_links");
+  const canPasswordProtection = hasFeatureAccess(plan, "password_protection");
   const [title, setTitle] = useState(form.title);
   const [description, setDescription] = useState(form.description ?? "");
   const [welcomeTitle, setWelcomeTitle] = useState(form.settings.welcome_title ?? "");
@@ -16,6 +26,12 @@ export function EditFormClient({ form }: { form: Form }) {
   const [surveyMode, setSurveyMode] = useState<"anonymous" | "tracked">(form.settings.survey_mode ?? "anonymous");
   const [trackingFields, setTrackingFields] = useState<string[]>(form.settings.tracking_fields ?? []);
   const [newTrackingField, setNewTrackingField] = useState("");
+  const [redirectUrl, setRedirectUrl] = useState(form.settings.redirect_url ?? "");
+  const [notificationsEmail, setNotificationsEmail] = useState(form.settings.notifications_email ?? "");
+  const [themeColor, setThemeColor] = useState(form.settings.theme_color ?? "#2563eb");
+  const [showBranding, setShowBranding] = useState(form.settings.show_branding ?? true);
+  const [formPassword, setFormPassword] = useState("");
+  const [hasExistingPassword, setHasExistingPassword] = useState(!!form.settings.password_hash);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -26,6 +42,14 @@ export function EditFormClient({ form }: { form: Form }) {
 
     try {
       const supabase = createClient();
+
+      // Hash password if changed
+      let passwordHash = form.settings.password_hash;
+      if (formPassword.trim()) {
+        passwordHash = await sha256(formPassword.trim());
+      } else if (!hasExistingPassword) {
+        passwordHash = undefined;
+      }
 
       const { error: updateError } = await supabase
         .from("forms")
@@ -40,6 +64,11 @@ export function EditFormClient({ form }: { form: Form }) {
             submit_message: submitMessage,
             survey_mode: surveyMode,
             tracking_fields: surveyMode === "tracked" ? trackingFields : [],
+            redirect_url: redirectUrl.trim() || undefined,
+            notifications_email: notificationsEmail.trim() || undefined,
+            theme_color: themeColor,
+            show_branding: showBranding,
+            password_hash: passwordHash,
           },
         })
         .eq("id", form.id);
@@ -107,6 +136,88 @@ export function EditFormClient({ form }: { form: Form }) {
         />
       </div>
 
+      {/* Appearance */}
+      {canThemeColor ? (
+        <div className="mb-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-3 flex items-center gap-2">
+            <svg className="w-4 h-4 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+            </svg>
+            Appearance
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2">
+                Theme color
+              </label>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <input
+                    type="color"
+                    value={themeColor}
+                    onChange={(e) => setThemeColor(e.target.value)}
+                    className="w-10 h-10 rounded-lg border border-zinc-200 dark:border-zinc-700 cursor-pointer bg-transparent [&::-webkit-color-swatch-wrapper]:p-0.5 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:rounded-md [&::-moz-color-swatch]:border-none"
+                  />
+                </div>
+                <input
+                  type="text"
+                  value={themeColor}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (/^#[0-9a-fA-F]{0,6}$/.test(v)) setThemeColor(v);
+                  }}
+                  className="w-28 px-3 py-2 text-sm font-mono border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="#2563eb"
+                />
+                <div className="flex gap-1.5">
+                  {["#2563eb", "#7c3aed", "#059669", "#dc2626", "#ea580c", "#0891b2", "#db2777", "#1d4ed8"].map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setThemeColor(c)}
+                      className={`w-6 h-6 rounded-full border-2 transition-all ${
+                        themeColor === c ? "border-zinc-900 dark:border-white scale-110" : "border-transparent hover:scale-110"
+                      }`}
+                      style={{ backgroundColor: c }}
+                      title={c}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+            {canHideBranding && (
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    Show &quot;Powered by FormCraft&quot; branding
+                  </label>
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
+                    Displayed on the public form
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowBranding(!showBranding)}
+                  className={`relative w-10 h-6 rounded-full transition-colors ${
+                    showBranding ? "bg-blue-600" : "bg-zinc-300 dark:bg-zinc-700"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                      showBranding ? "translate-x-4" : ""
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="mb-6">
+          <UpgradePrompt feature="Custom Appearance & Colors" requiredPlan={getRequiredPlan("theme_color")} />
+        </div>
+      )}
+
       {/* Welcome screen settings */}
       <div className="mb-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5">
         <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-3 flex items-center gap-2">
@@ -146,9 +257,10 @@ export function EditFormClient({ form }: { form: Form }) {
       </div>
 
       {/* Form fields editor */}
-      <FormEditor fields={fields} onChange={setFields} />
+      <FormEditor fields={fields} onChange={setFields} plan={plan} />
 
       {/* Survey Mode */}
+      {canTrackedLinks ? (
       <div className="mt-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5">
         <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-3 flex items-center gap-2">
           <svg className="w-4 h-4 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -240,6 +352,11 @@ export function EditFormClient({ form }: { form: Form }) {
           </div>
         )}
       </div>
+      ) : (
+        <div className="mt-6">
+          <UpgradePrompt feature="Tracked Survey Mode" requiredPlan={getRequiredPlan("tracked_links")} />
+        </div>
+      )}
 
       {/* Submit message settings */}
       <div className="mt-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5">
@@ -260,7 +377,101 @@ export function EditFormClient({ form }: { form: Form }) {
             placeholder="e.g., Thank you! Your feedback means the world to us."
           />
         </div>
+        {canRedirectUrl && (
+          <div className="mt-4">
+            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+              Redirect URL <span className="text-zinc-400 dark:text-zinc-500">(optional)</span>
+            </label>
+            <input
+              value={redirectUrl}
+              onChange={(e) => setRedirectUrl(e.target.value)}
+              type="url"
+              className="w-full px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="e.g., https://yoursite.com/thanks"
+            />
+            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
+              Redirect respondents to this URL after submission instead of showing the thank-you screen.
+            </p>
+          </div>
+        )}
       </div>
+
+      {/* Notifications */}
+      {canNotifications ? (
+        <div className="mt-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-3 flex items-center gap-2">
+            <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Notifications
+          </h3>
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+              Notification email <span className="text-zinc-400 dark:text-zinc-500">(optional)</span>
+            </label>
+            <input
+              value={notificationsEmail}
+              onChange={(e) => setNotificationsEmail(e.target.value)}
+              type="email"
+              className="w-full px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="e.g., you@company.com"
+            />
+            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
+              Get an email notification each time someone submits a response.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-6">
+          <UpgradePrompt feature="Email Notifications" requiredPlan={getRequiredPlan("email_notifications")} />
+        </div>
+      )}
+
+      {/* Password Protection */}
+      {canPasswordProtection ? (
+        <div className="mt-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-3 flex items-center gap-2">
+            <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Password Protection
+          </h3>
+          {hasExistingPassword && (
+            <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
+              <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <span className="text-xs text-green-700 dark:text-green-300">Password is set. Enter a new one below to change it.</span>
+              <button
+                type="button"
+                onClick={() => { setHasExistingPassword(false); setFormPassword(""); }}
+                className="ml-auto text-xs text-red-500 hover:text-red-600 font-medium"
+              >
+                Remove
+              </button>
+            </div>
+          )}
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+              {hasExistingPassword ? "New password" : "Set a password"} <span className="text-zinc-400 dark:text-zinc-500">(optional)</span>
+            </label>
+            <input
+              value={formPassword}
+              onChange={(e) => setFormPassword(e.target.value)}
+              type="password"
+              className="w-full px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter a password for this form"
+            />
+            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
+              Respondents must enter this password before they can access the form.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-6">
+          <UpgradePrompt feature="Password-Protected Forms" requiredPlan={getRequiredPlan("password_protection")} />
+        </div>
+      )}
     </div>
   );
 }

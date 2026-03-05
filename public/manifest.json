@@ -1,0 +1,16 @@
+{
+  "name": "FormCraft AI",
+  "short_name": "FormCraft",
+  "description": "Describe your form in plain English. AI builds it instantly.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

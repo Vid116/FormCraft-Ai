@@ -28,7 +28,7 @@ export default async function PublicFormPage({
   const typedForm = form as Form;
 
   // Extract tracking params — support both ?t=shortcode and legacy raw query params
-  let trackingParams: Record<string, string> = {};
+  const trackingParams: Record<string, string> = {};
   if (typedForm.settings.survey_mode === "tracked" && typedForm.settings.tracking_fields?.length) {
     const shortCode = typeof sp.t === "string" ? sp.t : undefined;
 
@@ -60,5 +60,11 @@ export default async function PublicFormPage({
     }
   }
 
-  return <PublicFormRenderer form={typedForm} trackingParams={trackingParams} />;
+  return (
+    <PublicFormRenderer
+      form={typedForm}
+      trackingParams={trackingParams}
+      isPasswordProtected={!!typedForm.settings.password_hash}
+    />
+  );
 }

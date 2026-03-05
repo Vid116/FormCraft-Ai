@@ -160,53 +160,7 @@ export function PublicFormRenderer({ form, trackingParams }: { form: Form; track
     setAnswers((prev) => ({ ...prev, [fieldId]: value }));
   }
 
-  const goNext = useCallback(() => {
-    if (step >= 0 && step < totalSteps) {
-      const field = visibleFields[step];
-      if (field.required && isFieldEmpty(field, answers[field.id])) {
-        setShakeField(true);
-        setTimeout(() => setShakeField(false), 600);
-        return;
-      }
-    }
-    setError("");
-    setDirection("forward");
-    if (step < totalSteps - 1) {
-      setStep((s) => s + 1);
-    } else if (step === totalSteps - 1) {
-      handleSubmit();
-    }
-  }, [step, totalSteps, answers, visibleFields]);
-
-  const goBack = useCallback(() => {
-    if (step > -1 && !submitting) {
-      setDirection("back");
-      setStep((s) => s - 1);
-      setError("");
-    }
-  }, [step, submitting]);
-
-  // Keyboard navigation
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        if (!submitted && !submitting) goNext();
-      }
-      if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
-        if (!submitted) goBack();
-      }
-    }
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [goNext, goBack, submitted, submitting]);
-
-  // Touch swipe navigation (up = next, down = back)
-  const swipeNext = useCallback(() => { if (!submitted && !submitting) goNext(); }, [submitted, submitting, goNext]);
-  const swipeBack = useCallback(() => { if (!submitted) goBack(); }, [submitted, goBack]);
-  useSwipe(swipeNext, swipeBack);
-
-  async function handleSubmit() {
+  const handleSubmit = useCallback(async () => {
     setSubmitting(true);
     setError("");
 
@@ -242,7 +196,53 @@ export function PublicFormRenderer({ form, trackingParams }: { form: Form; track
     } finally {
       setSubmitting(false);
     }
-  }
+  }, [answers, form.id, totalSteps, trackingParams, visibleFields]);
+
+  const goNext = useCallback(() => {
+    if (step >= 0 && step < totalSteps) {
+      const field = visibleFields[step];
+      if (field.required && isFieldEmpty(field, answers[field.id])) {
+        setShakeField(true);
+        setTimeout(() => setShakeField(false), 600);
+        return;
+      }
+    }
+    setError("");
+    setDirection("forward");
+    if (step < totalSteps - 1) {
+      setStep((s) => s + 1);
+    } else if (step === totalSteps - 1) {
+      handleSubmit();
+    }
+  }, [step, totalSteps, answers, visibleFields, handleSubmit]);
+
+  const goBack = useCallback(() => {
+    if (step > -1 && !submitting) {
+      setDirection("back");
+      setStep((s) => s - 1);
+      setError("");
+    }
+  }, [step, submitting]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        if (!submitted && !submitting) goNext();
+      }
+      if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+        if (!submitted) goBack();
+      }
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [goNext, goBack, submitted, submitting]);
+
+  // Touch swipe navigation (up = next, down = back)
+  const swipeNext = useCallback(() => { if (!submitted && !submitting) goNext(); }, [submitted, submitting, goNext]);
+  const swipeBack = useCallback(() => { if (!submitted) goBack(); }, [submitted, goBack]);
+  useSwipe(swipeNext, swipeBack);
 
   return (
     <div
@@ -709,94 +709,108 @@ function StepFieldRenderer({
 
   // File upload — uploads to Supabase Storage
   if (field.type === "file_upload") {
-    const fileVal = value as { name: string; url: string } | null;
-    const [uploading, setUploading] = useState(false);
-    const [uploadError, setUploadError] = useState("");
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-
-    async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      if (file.size > MAX_FILE_SIZE) {
-        setUploadError("File must be under 10MB");
-        return;
-      }
-
-      setUploading(true);
-      setUploadError("");
-
-      try {
-        const supabase = createClient();
-        const ext = file.name.split(".").pop() ?? "bin";
-        const path = `${formId}/${field.id}/${Date.now()}.${ext}`;
-
-        const { error: uploadErr } = await supabase.storage
-          .from("form-uploads")
-          .upload(path, file);
-
-        if (uploadErr) throw uploadErr;
-
-        const { data: urlData } = supabase.storage
-          .from("form-uploads")
-          .getPublicUrl(path);
-
-        onChange({ name: file.name, url: urlData.publicUrl });
-      } catch {
-        setUploadError("Upload failed. Please try again.");
-      } finally {
-        setUploading(false);
-      }
-    }
-
-    return (
-      <div>
-        <label className="block cursor-pointer">
-          <div className={`flex flex-col items-center justify-center py-12 rounded-2xl border-2 border-dashed transition-all duration-300 ${
-            fileVal ? "border-emerald-400/50 bg-emerald-500/10" : uploading ? "border-blue-400/50 bg-blue-500/10" : "border-white/15 bg-white/5 hover:bg-white/8 hover:border-white/25"
-          }`}>
-            {uploading ? (
-              <>
-                <svg className="w-8 h-8 text-blue-400 mb-2 animate-spin" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                <span className="text-white/50 text-sm">Uploading...</span>
-              </>
-            ) : fileVal ? (
-              <>
-                <svg className="w-8 h-8 text-emerald-400 mb-2 fc-pop-in" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-white/70 text-sm">{fileVal.name}</span>
-                <button
-                  type="button"
-                  onClick={(ev) => { ev.preventDefault(); onChange(null); }}
-                  className="mt-2 text-xs text-white/30 hover:text-red-400 transition-colors"
-                >
-                  Remove file
-                </button>
-              </>
-            ) : (
-              <>
-                <svg className="w-8 h-8 text-white/30 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <span className="text-white/40 text-sm">Click to upload a file</span>
-                <span className="text-white/20 text-xs mt-1">Max 10MB</span>
-              </>
-            )}
-          </div>
-          {!fileVal && !uploading && <input type="file" className="hidden" onChange={handleFileSelect} />}
-        </label>
-        {uploadError && (
-          <p className="mt-2 text-xs text-red-400">{uploadError}</p>
-        )}
-      </div>
-    );
+    return <FileUploadField field={field} value={value} onChange={onChange} formId={formId} />;
   }
 
   return null;
+}
+
+function FileUploadField({
+  field,
+  value,
+  onChange,
+  formId,
+}: {
+  field: FormField;
+  value: unknown;
+  onChange: (val: unknown) => void;
+  formId: string;
+}) {
+  const fileVal = value as { name: string; url: string } | null;
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      setUploadError("File must be under 10MB");
+      return;
+    }
+
+    setUploading(true);
+    setUploadError("");
+
+    try {
+      const supabase = createClient();
+      const ext = file.name.split(".").pop() ?? "bin";
+      const path = `${formId}/${field.id}/${Date.now()}.${ext}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from("form-uploads")
+        .upload(path, file);
+
+      if (uploadErr) throw uploadErr;
+
+      const { data: urlData } = supabase.storage
+        .from("form-uploads")
+        .getPublicUrl(path);
+
+      onChange({ name: file.name, url: urlData.publicUrl });
+    } catch {
+      setUploadError("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div>
+      <label className="block cursor-pointer">
+        <div className={`flex flex-col items-center justify-center py-12 rounded-2xl border-2 border-dashed transition-all duration-300 ${
+          fileVal ? "border-emerald-400/50 bg-emerald-500/10" : uploading ? "border-blue-400/50 bg-blue-500/10" : "border-white/15 bg-white/5 hover:bg-white/8 hover:border-white/25"
+        }`}>
+          {uploading ? (
+            <>
+              <svg className="w-8 h-8 text-blue-400 mb-2 animate-spin" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="text-white/50 text-sm">Uploading...</span>
+            </>
+          ) : fileVal ? (
+            <>
+              <svg className="w-8 h-8 text-emerald-400 mb-2 fc-pop-in" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="text-white/70 text-sm">{fileVal.name}</span>
+              <button
+                type="button"
+                onClick={(ev) => { ev.preventDefault(); onChange(null); }}
+                className="mt-2 text-xs text-white/30 hover:text-red-400 transition-colors"
+              >
+                Remove file
+              </button>
+            </>
+          ) : (
+            <>
+              <svg className="w-8 h-8 text-white/30 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <span className="text-white/40 text-sm">Click to upload a file</span>
+              <span className="text-white/20 text-xs mt-1">Max 10MB</span>
+            </>
+          )}
+        </div>
+        {!fileVal && !uploading && <input type="file" className="hidden" onChange={handleFileSelect} />}
+      </label>
+      {uploadError && (
+        <p className="mt-2 text-xs text-red-400">{uploadError}</p>
+      )}
+    </div>
+  );
 }
 
 /* ═══════════════════════════════════════

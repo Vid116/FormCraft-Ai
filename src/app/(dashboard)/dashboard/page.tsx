@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { FormCard } from "@/components/dashboard/form-card";
+import { FormSearch } from "@/components/dashboard/form-search";
+import type { Metadata } from "next";
 import type { Form } from "@/lib/types/form";
+
+export const metadata: Metadata = {
+  title: "My Forms - FormCraft AI",
+};
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -51,11 +56,7 @@ export default async function DashboardPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {typedForms.map((form) => (
-            <FormCard key={form.id} form={form} />
-          ))}
-        </div>
+        <FormSearch forms={typedForms} />
       )}
     </div>
   );

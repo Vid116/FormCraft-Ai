@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function SignupPage() {
+function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const plan = searchParams.get("plan");
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
@@ -23,12 +25,18 @@ export default function SignupPage() {
       return;
     }
 
+    // If user came from a paid plan link, redirect to billing after verification
+    const callbackNext =
+      plan && (plan === "pro" || plan === "business")
+        ? `/dashboard/billing?upgrade=${plan}`
+        : "/dashboard";
+
     const supabase = createClient();
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(callbackNext)}`,
       },
     });
 
@@ -38,9 +46,84 @@ export default function SignupPage() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push("/verify-email");
   }
 
+  return (
+    <>
+      {plan && (
+        <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-sm rounded-lg p-3 mb-4 text-center">
+          Create your account to start your <strong>{plan}</strong> plan
+        </div>
+      )}
+
+      <form onSubmit={handleSignup} className="space-y-4">
+        {error && (
+          <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-lg p-3">
+            {error}
+          </div>
+        )}
+
+        <div>
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+          >
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="you@example.com"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+          >
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+            className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="At least 6 characters"
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
+        >
+          {loading ? "Creating account..." : "Create account"}
+        </button>
+      </form>
+
+      <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mt-6">
+        Already have an account?{" "}
+        <Link
+          href="/login"
+          className="text-blue-600 hover:underline font-medium"
+        >
+          Sign in
+        </Link>
+      </p>
+    </>
+  );
+}
+
+export default function SignupPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4">
       <div className="w-full max-w-sm">
@@ -53,59 +136,9 @@ export default function SignupPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSignup} className="space-y-4">
-          {error && (
-            <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-lg p-3">
-              {error}
-            </div>
-          )}
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="you@example.com"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="At least 6 characters"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
-          >
-            {loading ? "Creating account..." : "Create account"}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mt-6">
-          Already have an account?{" "}
-          <Link href="/login" className="text-blue-600 hover:underline font-medium">
-            Sign in
-          </Link>
-        </p>
+        <Suspense>
+          <SignupForm />
+        </Suspense>
       </div>
     </div>
   );

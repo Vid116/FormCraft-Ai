@@ -71,6 +71,7 @@ export interface FormSettings {
   notifications_email?: string;
   survey_mode?: "anonymous" | "tracked";
   tracking_fields?: string[];
+  password_hash?: string;
 }
 
 export interface FormResponse {

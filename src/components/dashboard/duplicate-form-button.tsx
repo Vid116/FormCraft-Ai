@@ -4,11 +4,13 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
+import { useToast } from "@/components/ui/toast";
 import type { Form } from "@/lib/types/form";
 
 export function DuplicateFormButton({ form }: { form: Form }) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   async function duplicate() {
     setLoading(true);
@@ -26,9 +28,10 @@ export function DuplicateFormButton({ form }: { form: Form }) {
         response_count: 0,
       });
       if (error) throw error;
+      toast("Form duplicated", "success");
       router.push(`/dashboard/forms/${newId}`);
     } catch {
-      alert("Failed to duplicate form. Please try again.");
+      toast("Failed to duplicate form. Please try again.", "error");
     } finally {
       setLoading(false);
     }

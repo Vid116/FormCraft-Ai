@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { FormField, FieldType, ConditionOperator, FieldCondition } from "@/lib/types/form";
+import type { PlanId } from "@/lib/stripe";
+import { hasFeatureAccess } from "@/lib/features";
 
-const FIELD_TYPE_LABELS: Record<FieldType, string> = {
+const ALL_FIELD_TYPE_LABELS: Record<FieldType, string> = {
   short_text: "Short Text",
   long_text: "Long Text",
   email: "Email",
@@ -30,9 +32,19 @@ const OPERATOR_LABELS: Record<ConditionOperator, string> = {
 interface FormEditorProps {
   fields: FormField[];
   onChange: (fields: FormField[]) => void;
+  plan?: PlanId;
 }
 
-export function FormEditor({ fields, onChange }: FormEditorProps) {
+export function FormEditor({ fields, onChange, plan = "free" }: FormEditorProps) {
+  const canFileUpload = hasFeatureAccess(plan, "file_upload");
+  const canConditionalLogic = hasFeatureAccess(plan, "conditional_logic");
+
+  // Filter field types based on plan
+  const FIELD_TYPE_LABELS = Object.fromEntries(
+    Object.entries(ALL_FIELD_TYPE_LABELS).filter(
+      ([key]) => key !== "file_upload" || canFileUpload
+    )
+  ) as Record<string, string>;
   function updateField(id: string, updates: Partial<FormField>) {
     onChange(fields.map((f) => (f.id === id ? { ...f, ...updates } : f)));
   }
@@ -236,7 +248,7 @@ export function FormEditor({ fields, onChange }: FormEditorProps) {
               )}
 
               {/* Condition builder */}
-              {index > 0 && !field.condition && (
+              {canConditionalLogic && index > 0 && !field.condition && (
                 <ConditionAdder
                   availableFields={getConditionableFields(index)}
                   onAdd={(condition) => updateField(field.id, { condition })}
