@@ -307,8 +307,8 @@ export function PublicFormRenderer({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 overflow-hidden transition-all duration-1000 ease-out"
-      style={{ background: getGradient(progress, submitted) }}
+      className="fixed inset-0 overflow-x-hidden overflow-y-auto overscroll-y-contain transition-all duration-1000 ease-out"
+      style={{ background: getGradient(progress, submitted), WebkitOverflowScrolling: "touch" }}
     >
       {/* Animated CSS */}
       <style>{formAnimationStyles}</style>
@@ -364,7 +364,7 @@ export function PublicFormRenderer({
       )}
 
       {/* Content area — padded for thumb reach on mobile */}
-      <div className="flex items-center justify-center min-h-screen px-4 sm:px-6 pb-24 sm:pb-6">
+      <div className="flex items-start sm:items-center justify-center min-h-[100dvh] px-4 sm:px-6 pt-20 sm:pt-6 pb-24 sm:pb-6">
         <div className="w-full max-w-xl">
 
           {/* ── Welcome screen ── */}
