@@ -124,11 +124,13 @@ class OpenAICompatProvider implements AIProvider {
   private apiKey: string;
   private baseUrl: string;
   private model: string;
+  private maxTokens: number;
 
-  constructor(apiKey: string, baseUrl: string, model: string) {
+  constructor(apiKey: string, baseUrl: string, model: string, maxTokens: number) {
     this.apiKey = apiKey;
     this.baseUrl = baseUrl.replace(/\/$/, "");
     this.model = model;
+    this.maxTokens = maxTokens;
   }
 
   async generate(prompt: string, systemPrompt: string): Promise<string> {
@@ -145,7 +147,7 @@ class OpenAICompatProvider implements AIProvider {
         },
         body: JSON.stringify({
           model: this.model,
-          max_tokens: 4096,
+          max_tokens: this.maxTokens,
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: prompt },
@@ -202,12 +204,16 @@ function getProvider(): AIProvider {
     const key = process.env.OPENAI_COMPAT_API_KEY;
     const baseUrl = process.env.OPENAI_COMPAT_BASE_URL;
     const model = process.env.OPENAI_COMPAT_MODEL;
+    const rawMaxTokens = Number(process.env.OPENAI_COMPAT_MAX_TOKENS ?? 1200);
+    const maxTokens = Number.isFinite(rawMaxTokens) && rawMaxTokens >= 256
+      ? Math.floor(rawMaxTokens)
+      : 1200;
 
     if (!key) throw new Error("OPENAI_COMPAT_API_KEY is required when AI_PROVIDER=openai_compat");
     if (!baseUrl) throw new Error("OPENAI_COMPAT_BASE_URL is required when AI_PROVIDER=openai_compat");
     if (!model) throw new Error("OPENAI_COMPAT_MODEL is required when AI_PROVIDER=openai_compat");
 
-    return new OpenAICompatProvider(key, baseUrl, model);
+    return new OpenAICompatProvider(key, baseUrl, model, maxTokens);
   }
 
   return new ClaudeCLIProvider();
