@@ -6,6 +6,31 @@ interface AIProvider {
 }
 
 const DEFAULT_AI_TIMEOUT_MS = 45_000;
+const OPENAI_COMPAT_FORM_PROMPT = `Return ONLY valid JSON:
+{
+  "title": "short title",
+  "welcome_title": "short welcome title",
+  "welcome_description": "1 short sentence",
+  "submit_message": "short thank you",
+  "fields": [
+    {
+      "id": "field_1",
+      "type": "short_text|long_text|email|number|phone|url|multiple_choice|checkbox|dropdown|rating|date",
+      "label": "question",
+      "required": true,
+      "placeholder": "",
+      "options": [{"id":"opt_1","label":"Option","value":"option"}],
+      "validation": {"min":1,"max":5},
+      "order": 0
+    }
+  ]
+}
+Rules:
+- Return 4-8 fields only
+- Keep labels concise
+- Use rating only when needed
+- Include options only for multiple_choice/checkbox/dropdown
+- No markdown, no explanation`;
 
 function getProviderMode(): string {
   return process.env.AI_PROVIDER ?? "sdk";
@@ -204,10 +229,10 @@ function getProvider(): AIProvider {
     const key = process.env.OPENAI_COMPAT_API_KEY;
     const baseUrl = process.env.OPENAI_COMPAT_BASE_URL;
     const model = process.env.OPENAI_COMPAT_MODEL;
-    const rawMaxTokens = Number(process.env.OPENAI_COMPAT_MAX_TOKENS ?? 1200);
+    const rawMaxTokens = Number(process.env.OPENAI_COMPAT_MAX_TOKENS ?? 500);
     const maxTokens = Number.isFinite(rawMaxTokens) && rawMaxTokens >= 256
       ? Math.floor(rawMaxTokens)
-      : 1200;
+      : 500;
 
     if (!key) throw new Error("OPENAI_COMPAT_API_KEY is required when AI_PROVIDER=openai_compat");
     if (!baseUrl) throw new Error("OPENAI_COMPAT_BASE_URL is required when AI_PROVIDER=openai_compat");
@@ -234,10 +259,13 @@ export async function generateFormFromDescription(description: string): Promise<
   const mode = getProviderMode();
   console.info(`[AI] generate_form start provider=${mode} prompt_chars=${description.length}`);
 
+  const boundedDescription = description.slice(0, 600);
+  const systemPrompt = mode === "openai_compat" ? OPENAI_COMPAT_FORM_PROMPT : FORM_GENERATION_PROMPT;
+
   const provider = getProvider();
   let result = "";
   try {
-    result = await provider.generate(description, FORM_GENERATION_PROMPT);
+    result = await provider.generate(boundedDescription, systemPrompt);
   } catch (error) {
     const durationMs = Date.now() - startedAt;
     console.error(`[AI] generate_form failed provider=${mode} duration_ms=${durationMs}`, error);
