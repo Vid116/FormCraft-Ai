@@ -133,6 +133,9 @@ function useSwipe(onSwipeUp: () => void, onSwipeDown: () => void) {
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
+    // On touch-first devices, preserve native vertical scrolling.
+    if (window.matchMedia("(pointer: coarse)").matches) return;
+
     function handleTouchStart(e: TouchEvent) {
       const t = e.touches[0];
       touchStart.current = { x: t.clientX, y: t.clientY };
@@ -308,7 +311,7 @@ export function PublicFormRenderer({
     <div
       ref={containerRef}
       className="fixed inset-0 overflow-x-hidden overflow-y-auto overscroll-y-contain transition-all duration-1000 ease-out"
-      style={{ background: getGradient(progress, submitted), WebkitOverflowScrolling: "touch" }}
+      style={{ background: getGradient(progress, submitted), WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
     >
       {/* Animated CSS */}
       <style>{formAnimationStyles}</style>
