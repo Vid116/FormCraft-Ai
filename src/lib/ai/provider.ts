@@ -83,6 +83,61 @@ class AnthropicAPIProvider implements AIProvider {
   }
 }
 
+// --- PROD: OpenAI-compatible API Provider (e.g. Modal) ---
+class OpenAICompatProvider implements AIProvider {
+  private apiKey: string;
+  private baseUrl: string;
+  private model: string;
+
+  constructor(apiKey: string, baseUrl: string, model: string) {
+    this.apiKey = apiKey;
+    this.baseUrl = baseUrl.replace(/\/$/, "");
+    this.model = model;
+  }
+
+  async generate(prompt: string, systemPrompt: string): Promise<string> {
+    const response = await fetch(`${this.baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: this.model,
+        max_tokens: 4096,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: prompt },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI-compatible API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data?.choices?.[0]?.message?.content;
+
+    if (typeof content === "string") return content;
+    if (Array.isArray(content)) {
+      return content
+        .map((part: unknown) =>
+          typeof part === "object" &&
+          part !== null &&
+          "text" in part &&
+          typeof (part as { text?: unknown }).text === "string"
+            ? (part as { text: string }).text
+            : ""
+        )
+        .join("")
+        .trim();
+    }
+
+    return "";
+  }
+}
+
 // --- Factory ---
 function getProvider(): AIProvider {
   const mode = process.env.AI_PROVIDER ?? "sdk";
@@ -91,6 +146,18 @@ function getProvider(): AIProvider {
     const key = process.env.ANTHROPIC_API_KEY;
     if (!key) throw new Error("ANTHROPIC_API_KEY is required when AI_PROVIDER=api");
     return new AnthropicAPIProvider(key);
+  }
+
+  if (mode === "openai_compat") {
+    const key = process.env.OPENAI_COMPAT_API_KEY;
+    const baseUrl = process.env.OPENAI_COMPAT_BASE_URL;
+    const model = process.env.OPENAI_COMPAT_MODEL;
+
+    if (!key) throw new Error("OPENAI_COMPAT_API_KEY is required when AI_PROVIDER=openai_compat");
+    if (!baseUrl) throw new Error("OPENAI_COMPAT_BASE_URL is required when AI_PROVIDER=openai_compat");
+    if (!model) throw new Error("OPENAI_COMPAT_MODEL is required when AI_PROVIDER=openai_compat");
+
+    return new OpenAICompatProvider(key, baseUrl, model);
   }
 
   return new ClaudeCLIProvider();
