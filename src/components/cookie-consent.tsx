@@ -1,13 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export function CookieConsent() {
-  const [visible, setVisible] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return !localStorage.getItem("cookie-consent");
-  });
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      setVisible(!localStorage.getItem("cookie-consent"));
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   function accept() {
     localStorage.setItem("cookie-consent", "accepted");
@@ -19,7 +25,7 @@ export function CookieConsent() {
     setVisible(false);
   }
 
-  if (!visible) return null;
+  if (!mounted || !visible) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-4">

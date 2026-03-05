@@ -134,8 +134,14 @@ export function PublicFormRenderer({
   const [error, setError] = useState("");
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [shakeField, setShakeField] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const restoredRef = useRef(false);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   // Restore saved progress on mount
   useEffect(() => {
@@ -264,7 +270,7 @@ export function PublicFormRenderer({
 
       {/* Ambient floating particles */}
       <div className="fc-particles" aria-hidden="true">
-        {Array.from({ length: 20 }).map((_, i) => (
+        {mounted && Array.from({ length: 20 }).map((_, i) => (
           <div
             key={i}
             className="fc-particle"
