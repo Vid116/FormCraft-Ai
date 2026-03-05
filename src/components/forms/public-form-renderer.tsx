@@ -290,6 +290,10 @@ export function PublicFormRenderer({
   // Keyboard navigation
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      const tagName = target?.tagName;
+      if (tagName === "TEXTAREA" || target?.isContentEditable) return;
+
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         if (!submitted && !submitting) goNext();
@@ -310,7 +314,7 @@ export function PublicFormRenderer({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 overflow-auto overscroll-contain transition-all duration-1000 ease-out"
+      className="relative min-h-[100svh] overflow-x-hidden overflow-y-auto overscroll-y-contain transition-all duration-1000 ease-out"
       style={{ background: getGradient(progress, submitted), WebkitOverflowScrolling: "touch" }}
     >
       {/* Animated CSS */}
@@ -337,7 +341,8 @@ export function PublicFormRenderer({
 
       {/* Progress bar */}
       {step >= 0 && !submitted && (
-        <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-white/10">
+        <div className="sticky top-0 left-0 right-0 z-50">
+          <div className="h-1 bg-white/10">
           <div
             className="h-full transition-all duration-700 ease-out"
             style={{
@@ -345,15 +350,16 @@ export function PublicFormRenderer({
               background: "linear-gradient(90deg, #60a5fa, #a78bfa, #34d399)",
             }}
           />
+          </div>
         </div>
       )}
 
       {/* Step counter + back button */}
       {step >= 0 && !submitted && (
-        <div className="fixed top-4 left-0 right-0 z-40 flex items-center justify-between px-6">
+        <div className="sticky top-1 left-0 right-0 z-40 flex items-center justify-between px-4 sm:px-6 pt-[max(env(safe-area-inset-top),0.75rem)] pb-2 bg-black/10 backdrop-blur-sm">
           <button
             onClick={goBack}
-            className={`fc-back-btn flex items-center gap-1.5 text-sm text-white/50 hover:text-white/90 transition-all duration-300 min-w-[48px] min-h-[48px] justify-center ${step <= -1 ? "opacity-0 pointer-events-none" : ""}`}
+            className={`fc-back-btn flex items-center gap-1.5 text-sm text-white/60 hover:text-white/90 transition-all duration-300 min-w-[48px] min-h-[48px] justify-center ${step <= -1 ? "opacity-0 pointer-events-none" : ""}`}
           >
             <svg className="w-5 h-5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -367,7 +373,7 @@ export function PublicFormRenderer({
       )}
 
       {/* Content area — padded for thumb reach on mobile */}
-      <div className="flex items-start sm:items-center justify-center min-h-[100dvh] px-4 sm:px-6 pt-20 sm:pt-6 pb-24 sm:pb-6">
+      <div className="flex items-start justify-center min-h-[100svh] px-4 sm:px-6 pt-6 sm:pt-10 pb-[calc(env(safe-area-inset-bottom)+5.5rem)] sm:pb-10">
         <div className="w-full max-w-xl">
 
           {/* ── Welcome screen ── */}
@@ -456,7 +462,7 @@ export function PublicFormRenderer({
               )}
 
               {/* Navigation — fixed at bottom on mobile for thumb reach */}
-              <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-0 sm:static sm:relative flex items-center gap-4 z-40 sm:mt-0">
+              <div className="sticky bottom-[max(env(safe-area-inset-bottom),0px)] -mx-4 px-4 py-3 sm:mx-0 sm:px-0 sm:py-0 sm:static sm:relative flex items-center gap-4 z-40 bg-gradient-to-t from-black/35 via-black/15 to-transparent backdrop-blur-sm sm:bg-transparent sm:backdrop-blur-none sm:mt-0">
                 <button
                   onClick={goNext}
                   disabled={submitting}
