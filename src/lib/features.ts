@@ -6,7 +6,7 @@ export const FEATURE_GATES = {
   theme_color: "pro",
   conditional_logic: "pro",
   qr_code: "pro",
-  form_duplication: "pro",
+  form_duplication: "free",
   email_notifications: "pro",
   password_protection: "pro",
   hide_branding: "pro",
