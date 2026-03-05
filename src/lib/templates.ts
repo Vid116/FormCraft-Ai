@@ -139,6 +139,10 @@ export const TEMPLATES: FormTemplate[] = [
       field("checkbox", "Which May dates work for you? (Select all that apply)", {
         description: "Select every date you can make it.",
         options: [
+          opt("Friday, April 17"),
+          opt("Saturday, April 18"),
+          opt("Friday, April 24"),
+          opt("Saturday, April 25"),
           opt("Friday, May 1"),
           opt("Saturday, May 2"),
           opt("Friday, May 8"),
@@ -149,6 +153,8 @@ export const TEMPLATES: FormTemplate[] = [
           opt("Saturday, May 23"),
           opt("Friday, May 29"),
           opt("Saturday, May 30"),
+          opt("Friday, June 5"),
+          opt("Saturday, June 6"),
         ],
       }),
     ],
