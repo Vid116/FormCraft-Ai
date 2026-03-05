@@ -341,7 +341,7 @@ export function PublicFormRenderer({
             : "items-start pt-6 sm:pt-10"
         }`}
       >
-        <div className="w-full max-w-xl">
+        <div className={`w-full ${step === -1 ? "max-w-2xl" : "max-w-xl"}`}>
 
           {/* ── Welcome screen ── */}
           {step === -1 && (
@@ -353,17 +353,17 @@ export function PublicFormRenderer({
                   </svg>
                 </div>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4 leading-tight tracking-tight">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight tracking-tight">
                 {form.settings.welcome_title || form.title}
               </h1>
               {(form.settings.welcome_description || form.description) && (
-                <p className="text-lg text-white/60 mb-10 leading-relaxed max-w-md mx-auto">
+                <p className="text-xl sm:text-2xl text-white/60 mb-10 leading-relaxed max-w-2xl mx-auto">
                   {form.settings.welcome_description || form.description}
                 </p>
               )}
               <button
                 onClick={goNext}
-                className="fc-start-btn group inline-flex items-center gap-3 px-10 py-5 sm:px-8 sm:py-4 bg-white text-zinc-900 font-semibold text-lg sm:text-base rounded-2xl hover:scale-105 active:scale-95 transition-all duration-300 shadow-2xl shadow-white/10 min-h-[48px]"
+                className="fc-start-btn group inline-flex items-center gap-3 px-10 py-5 sm:px-12 sm:py-5 bg-white text-zinc-900 font-semibold text-lg sm:text-xl rounded-2xl hover:scale-105 active:scale-95 transition-all duration-300 shadow-2xl shadow-white/10 min-h-[48px]"
               >
                 Start
                 <svg className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
