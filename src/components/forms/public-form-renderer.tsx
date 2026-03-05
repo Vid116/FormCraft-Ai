@@ -45,7 +45,52 @@ function getGradient(progress: number, submitted: boolean) {
   return `linear-gradient(135deg, ${lerpColor(a.from, b.from, t)}, ${lerpColor(a.via, b.via, t)}, ${lerpColor(a.to, b.to, t)})`;
 }
 
-// ─── Helper: check if a field answer is empty ───
+const WEEKEND_LABEL_RE = /^(Friday|Saturday),\s+([A-Za-z]+)\s+(\d{1,2})$/;
+
+type FieldOption = NonNullable<FormField["options"]>[number];
+
+function parseWeekendLabel(label: string): { weekday: "Friday" | "Saturday"; month: string; day: number } | null {
+  const match = label.match(WEEKEND_LABEL_RE);
+  if (!match) return null;
+  const weekday = match[1] as "Friday" | "Saturday";
+  const month = match[2];
+  const day = Number(match[3]);
+  if (!Number.isFinite(day)) return null;
+  return { weekday, month, day };
+}
+
+function formatWeekLabel(first: { month: string; day: number }, second: { month: string; day: number }, index: number) {
+  if (first.month === second.month) {
+    return `Week ${index + 1} - ${first.month} ${first.day}-${second.day}`;
+  }
+  return `Week ${index + 1} - ${first.month} ${first.day} - ${second.month} ${second.day}`;
+}
+
+function groupWeekendOptions(options: FieldOption[]) {
+  if (options.length < 4 || options.length % 2 !== 0) return null;
+
+  const parsed = options.map((opt) => ({ opt, parsed: parseWeekendLabel(opt.label) }));
+  if (parsed.some((entry) => !entry.parsed)) return null;
+
+  const groups: Array<{ label: string; options: FieldOption[] }> = [];
+  for (let i = 0; i < parsed.length; i += 2) {
+    const first = parsed[i].parsed!;
+    const second = parsed[i + 1].parsed!;
+    if (first.weekday !== "Friday" || second.weekday !== "Saturday") return null;
+
+    groups.push({
+      label: formatWeekLabel(
+        { month: first.month, day: first.day },
+        { month: second.month, day: second.day },
+        groups.length
+      ),
+      options: [parsed[i].opt, parsed[i + 1].opt],
+    });
+  }
+
+  return groups;
+}
+// Helper: check if a field answer is empty
 function isFieldEmpty(field: FormField, val: unknown): boolean {
   if (field.type === "rating") {
     return !(val && typeof val === "object" && (val as { score: number }).score != null);
@@ -651,41 +696,62 @@ function StepFieldRenderer({
   // Checkbox — multi-select cards
   if (field.type === "checkbox") {
     const selected = ((value as string[]) ?? []);
+    const options = field.options ?? [];
+    const weekendGroups = groupWeekendOptions(options);
+
+    function renderOptionButton(opt: FieldOption, i: number) {
+      const isChecked = selected.includes(opt.value);
+      return (
+        <button
+          key={opt.id}
+          type="button"
+          onClick={() => {
+            onChange(isChecked ? selected.filter((v) => v !== opt.value) : [...selected, opt.value]);
+          }}
+          className={`fc-option-card w-full text-left flex items-center gap-4 px-5 py-5 sm:py-4 rounded-xl border transition-all duration-300 min-h-[56px] ${
+            isChecked
+              ? "bg-white/15 border-white/40 scale-[1.02]"
+              : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
+          }`}
+          style={{ animationDelay: `${i * 40}ms` }}
+        >
+          <span className={`flex-shrink-0 w-10 h-10 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${
+            isChecked ? "bg-white text-zinc-900" : "bg-white/10 text-white/50"
+          }`}>
+            {isChecked ? (
+              <svg className="w-4 h-4 fc-pop-in" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <span className="text-sm font-bold">{String.fromCharCode(65 + i)}</span>
+            )}
+          </span>
+          <span className={`text-base transition-colors duration-300 ${isChecked ? "text-white font-medium" : "text-white/70"}`}>
+            {opt.label}
+          </span>
+        </button>
+      );
+    }
+
+    if (weekendGroups) {
+      return (
+        <div className="space-y-4">
+          {weekendGroups.map((group, groupIndex) => (
+            <div key={group.label} className="space-y-2">
+              <p className="text-xs uppercase tracking-wider text-white/35 pl-1">{group.label}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {group.options.map((opt, optionIndex) => renderOptionButton(opt, groupIndex * 2 + optionIndex))}
+              </div>
+            </div>
+          ))}
+          <p className="text-xs text-white/25 mt-2 pl-1">Tap all dates that work for you</p>
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-3 sm:space-y-2.5">
-        {(field.options ?? []).map((opt, i) => {
-          const isChecked = selected.includes(opt.value);
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => {
-                onChange(isChecked ? selected.filter((v) => v !== opt.value) : [...selected, opt.value]);
-              }}
-              className={`fc-option-card w-full text-left flex items-center gap-4 px-5 py-5 sm:py-4 rounded-xl border transition-all duration-300 min-h-[48px] ${
-                isChecked
-                  ? "bg-white/15 border-white/40 scale-[1.02]"
-                  : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
-              }`}
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              <span className={`flex-shrink-0 w-10 h-10 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${
-                isChecked ? "bg-white text-zinc-900" : "bg-white/10 text-white/50"
-              }`}>
-                {isChecked ? (
-                  <svg className="w-4 h-4 fc-pop-in" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  <span className="text-sm font-bold">{String.fromCharCode(65 + i)}</span>
-                )}
-              </span>
-              <span className={`text-base transition-colors duration-300 ${isChecked ? "text-white font-medium" : "text-white/70"}`}>
-                {opt.label}
-              </span>
-            </button>
-          );
-        })}
+        {options.map((opt, i) => renderOptionButton(opt, i))}
         <p className="text-xs text-white/25 mt-2 pl-1">Select all that apply</p>
       </div>
     );
@@ -993,3 +1059,5 @@ const formAnimationStyles = `
     }
   }
 `;
+
+
