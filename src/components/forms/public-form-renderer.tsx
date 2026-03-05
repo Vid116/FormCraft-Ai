@@ -310,8 +310,8 @@ export function PublicFormRenderer({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 overflow-x-hidden overflow-y-auto overscroll-y-contain transition-all duration-1000 ease-out"
-      style={{ background: getGradient(progress, submitted), WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
+      className="fixed inset-0 overflow-auto overscroll-contain transition-all duration-1000 ease-out"
+      style={{ background: getGradient(progress, submitted), WebkitOverflowScrolling: "touch" }}
     >
       {/* Animated CSS */}
       <style>{formAnimationStyles}</style>
