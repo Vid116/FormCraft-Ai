@@ -334,7 +334,13 @@ export function PublicFormRenderer({
       )}
 
       {/* Content area — padded for thumb reach on mobile */}
-      <div className="flex items-start justify-center min-h-[100svh] px-4 sm:px-6 pt-6 sm:pt-10 pb-[calc(env(safe-area-inset-bottom)+5.5rem)] sm:pb-10">
+      <div
+        className={`flex justify-center min-h-[100svh] px-4 sm:px-6 pb-[calc(env(safe-area-inset-bottom)+5.5rem)] sm:pb-10 ${
+          step === -1 || submitted
+            ? "items-center pt-6 sm:pt-8"
+            : "items-start pt-6 sm:pt-10"
+        }`}
+      >
         <div className="w-full max-w-xl">
 
           {/* ── Welcome screen ── */}
