@@ -116,7 +116,16 @@ function useSwipe(onSwipeUp: () => void, onSwipeDown: () => void) {
 }
 
 // ─── Main component ───
-export function PublicFormRenderer({ form, trackingParams }: { form: Form; trackingParams?: Record<string, string> }) {
+export function PublicFormRenderer({
+  form,
+  trackingParams,
+  isPasswordProtected: _isPasswordProtected = false,
+}: {
+  form: Form;
+  trackingParams?: Record<string, string>;
+  isPasswordProtected?: boolean;
+}) {
+  void _isPasswordProtected;
   // -1 = welcome screen, 0+ = index into visibleFields
   const [step, setStep] = useState(-1);
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
