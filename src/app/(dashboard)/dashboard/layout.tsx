@@ -26,7 +26,7 @@ export default async function DashboardLayout({
             <div className="flex items-center gap-8">
               <MobileNav email={user.email ?? ""} />
               <Link href="/dashboard" className="font-bold text-lg text-zinc-900 dark:text-zinc-100">
-                FormCraft<span className="text-blue-600">AI</span>
+                FormPoki<span className="text-blue-600">Fat</span>
               </Link>
               <nav className="hidden sm:flex items-center gap-1">
                 <Link
@@ -65,3 +65,5 @@ export default async function DashboardLayout({
     </div>
   );
 }
+
+

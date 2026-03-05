@@ -189,7 +189,7 @@ export function EditFormClient({ form, plan = "free" }: { form: Form; plan?: Pla
               <div className="flex items-center justify-between">
                 <div>
                   <label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                    Show &quot;Powered by FormCraft&quot; branding
+                    Show &quot;Powered by FormPoki Fat&quot; branding
                   </label>
                   <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
                     Displayed on the public form
@@ -475,3 +475,5 @@ export function EditFormClient({ form, plan = "free" }: { form: Form; plan?: Pla
     </div>
   );
 }
+
+

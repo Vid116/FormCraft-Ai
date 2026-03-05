@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Cookie Policy - FormCraft AI",
+  title: "Cookie Policy - FormPoki Fat",
 };
 
 export default function CookiePolicyPage() {
@@ -10,7 +10,7 @@ export default function CookiePolicyPage() {
       <header className="border-b border-zinc-100 dark:border-zinc-900">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14">
           <Link href="/" className="font-bold text-lg text-zinc-900 dark:text-zinc-100">
-            FormCraft<span className="text-blue-600">AI</span>
+            FormPoki<span className="text-blue-600">Fat</span>
           </Link>
           <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100">
             Back to home
@@ -79,7 +79,7 @@ export default function CookiePolicyPage() {
           <section>
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-3">Contact</h2>
             <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Questions? Contact us at privacy@formcraft.ai.
+              Questions? Contact us at privacy@formpokifat.ai.
             </p>
           </section>
         </div>
@@ -87,3 +87,5 @@ export default function CookiePolicyPage() {
     </div>
   );
 }
+
+

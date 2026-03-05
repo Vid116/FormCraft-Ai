@@ -28,7 +28,7 @@ export async function generateMetadata({
     .eq("id", id)
     .single();
   return {
-    title: form ? `${form.title} - FormCraft AI` : "Form - FormCraft AI",
+    title: form ? `${form.title} - FormPoki Fat` : "Form - FormPoki Fat",
   };
 }
 
@@ -166,3 +166,4 @@ export default async function FormDetailPage({
     </div>
   );
 }
+

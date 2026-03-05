@@ -7,7 +7,7 @@ export default function LandingPage() {
       <header className="border-b border-zinc-100 dark:border-zinc-900">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14">
           <span className="font-bold text-lg text-zinc-900 dark:text-zinc-100">
-            FormCraft<span className="text-blue-600">AI</span>
+            FormPoki<span className="text-blue-600">Fat</span>
           </span>
           <div className="flex items-center gap-4">
             <Link
@@ -37,7 +37,7 @@ export default function LandingPage() {
           <span className="text-blue-600">AI builds it instantly.</span>
         </h1>
         <p className="text-lg text-zinc-500 dark:text-zinc-400 mt-6 max-w-xl mx-auto leading-relaxed">
-          Stop dragging and dropping for hours. Tell FormCraft what you need in plain English and get a professional form in seconds — with AI-powered response insights.
+          Stop dragging and dropping for hours. Tell FormPoki Fat what you need in plain English and get a professional form in seconds — with AI-powered response insights.
         </p>
         <div className="flex items-center justify-center gap-4 mt-10">
           <Link
@@ -207,7 +207,7 @@ export default function LandingPage() {
       <footer className="border-t border-zinc-100 dark:border-zinc-900 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-zinc-400">
-            FormCraft AI &mdash; Build smarter forms with AI
+            FormPoki Fat &mdash; Build smarter forms with AI
           </p>
           <div className="flex items-center gap-4 text-sm text-zinc-400">
             <Link href="/privacy" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
@@ -225,3 +225,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+

@@ -37,7 +37,7 @@ export default function LoginPage() {
             Welcome back
           </h1>
           <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-            Sign in to your FormCraft account
+            Sign in to your FormPoki Fat account
           </p>
         </div>
 
@@ -102,3 +102,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+

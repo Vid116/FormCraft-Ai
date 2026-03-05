@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Privacy Policy - FormCraft AI",
+  title: "Privacy Policy - FormPoki Fat",
 };
 
 export default function PrivacyPolicyPage() {
@@ -10,7 +10,7 @@ export default function PrivacyPolicyPage() {
       <header className="border-b border-zinc-100 dark:border-zinc-900">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14">
           <Link href="/" className="font-bold text-lg text-zinc-900 dark:text-zinc-100">
-            FormCraft<span className="text-blue-600">AI</span>
+            FormPoki<span className="text-blue-600">Fat</span>
           </Link>
           <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100">
             Back to home
@@ -30,7 +30,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-3">1. Introduction</h2>
             <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              FormCraft AI (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our form builder service at formcraft.ai (the &quot;Service&quot;). By using the Service, you agree to the collection and use of information in accordance with this policy.
+              FormPoki Fat (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our form builder service at formpokifat.ai (the &quot;Service&quot;). By using the Service, you agree to the collection and use of information in accordance with this policy.
             </p>
           </section>
 
@@ -102,7 +102,7 @@ export default function PrivacyPolicyPage() {
               <li><strong>Right to Withdraw Consent</strong> &mdash; Withdraw consent at any time where processing is consent-based</li>
             </ul>
             <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed mt-3">
-              To exercise these rights, visit your <Link href="/dashboard/account" className="text-blue-600 hover:underline">Account Settings</Link> or contact us at privacy@formcraft.ai.
+              To exercise these rights, visit your <Link href="/dashboard/account" className="text-blue-600 hover:underline">Account Settings</Link> or contact us at privacy@formpokifat.ai.
             </p>
           </section>
 
@@ -123,7 +123,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-3">9. Children&apos;s Privacy</h2>
             <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              The Service is not intended for users under the age of 16. We do not knowingly collect personal data from children. If you believe a child has provided us with personal data, please contact us at privacy@formcraft.ai.
+              The Service is not intended for users under the age of 16. We do not knowingly collect personal data from children. If you believe a child has provided us with personal data, please contact us at privacy@formpokifat.ai.
             </p>
           </section>
 
@@ -138,7 +138,7 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-3">11. Contact Us</h2>
             <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
               For privacy-related inquiries, contact us at: <br />
-              <strong>Email:</strong> privacy@formcraft.ai
+              <strong>Email:</strong> privacy@formpokifat.ai
             </p>
           </section>
         </div>
@@ -146,3 +146,5 @@ export default function PrivacyPolicyPage() {
     </div>
   );
 }
+
+

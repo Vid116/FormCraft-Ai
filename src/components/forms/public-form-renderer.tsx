@@ -490,7 +490,7 @@ export function PublicFormRenderer({
 
               {form.settings.show_branding && (
                 <p className="mt-12 text-xs text-white/20">
-                  Powered by <span className="font-semibold text-white/30">FormCraft AI</span>
+                  Powered by <span className="font-semibold text-white/30">FormPoki Fat</span>
                 </p>
               )}
             </div>
@@ -502,7 +502,7 @@ export function PublicFormRenderer({
       {form.settings.show_branding && !submitted && step >= 0 && (
         <div className="pb-6 text-center">
           <span className="text-xs text-white/15">
-            Powered by <span className="font-semibold">FormCraft AI</span>
+            Powered by <span className="font-semibold">FormPoki Fat</span>
           </span>
         </div>
       )}
@@ -1035,5 +1035,6 @@ const formAnimationStyles = `
     }
   }
 `;
+
 
 

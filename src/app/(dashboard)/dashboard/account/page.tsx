@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AccountClient } from "./account-client";
 
 export const metadata: Metadata = {
-  title: "Account - FormCraft AI",
+  title: "Account - FormPoki Fat",
 };
 
 export default async function AccountPage() {
@@ -19,3 +19,4 @@ export default async function AccountPage() {
     />
   );
 }
+

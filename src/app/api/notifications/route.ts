@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           to: email,
           subject: `New response: ${form.title}`,
-          text: `Your form "${form.title}" received a new response.\n\nPreview: ${responsePreview || "(no preview available)"}\n\nView all responses in your FormCraft dashboard.`,
+          text: `Your form "${form.title}" received a new response.\n\nPreview: ${responsePreview || "(no preview available)"}\n\nView all responses in your FormPoki Fat dashboard.`,
         }),
       });
     }
@@ -72,3 +72,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to send notification" }, { status: 500 });
   }
 }
+
+

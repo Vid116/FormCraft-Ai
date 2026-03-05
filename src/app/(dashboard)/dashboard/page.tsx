@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import type { Form } from "@/lib/types/form";
 
 export const metadata: Metadata = {
-  title: "My Forms - FormCraft AI",
+  title: "My Forms - FormPoki Fat",
 };
 
 export default async function DashboardPage() {
@@ -61,3 +61,4 @@ export default async function DashboardPage() {
     </div>
   );
 }
+

@@ -5,7 +5,7 @@ import { PLANS } from "@/lib/stripe";
 import { BillingClient } from "./billing-client";
 
 export const metadata: Metadata = {
-  title: "Billing - FormCraft AI",
+  title: "Billing - FormPoki Fat",
 };
 
 export default async function BillingPage() {
@@ -47,3 +47,4 @@ export default async function BillingPage() {
     />
   );
 }
+

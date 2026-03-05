@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Terms of Service - FormCraft AI",
+  title: "Terms of Service - FormPoki Fat",
 };
 
 export default function TermsOfServicePage() {
@@ -10,7 +10,7 @@ export default function TermsOfServicePage() {
       <header className="border-b border-zinc-100 dark:border-zinc-900">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14">
           <Link href="/" className="font-bold text-lg text-zinc-900 dark:text-zinc-100">
-            FormCraft<span className="text-blue-600">AI</span>
+            FormPoki<span className="text-blue-600">Fat</span>
           </Link>
           <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100">
             Back to home
@@ -30,14 +30,14 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-3">1. Acceptance of Terms</h2>
             <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              By accessing or using FormCraft AI (&quot;the Service&quot;), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Service.
+              By accessing or using FormPoki Fat (&quot;the Service&quot;), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Service.
             </p>
           </section>
 
           <section>
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-3">2. Description of Service</h2>
             <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              FormCraft AI is an online form builder that uses artificial intelligence to help users create forms, collect responses, and generate insights from submissions. The Service is provided on a subscription basis with free and paid tiers.
+              FormPoki Fat is an online form builder that uses artificial intelligence to help users create forms, collect responses, and generate insights from submissions. The Service is provided on a subscription basis with free and paid tiers.
             </p>
           </section>
 
@@ -87,7 +87,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-3">8. Data Processing Responsibilities</h2>
             <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              As a form creator, you act as the data controller for information collected through your forms. You are responsible for ensuring that your data collection practices comply with applicable privacy laws (including GDPR and CCPA), obtaining necessary consents from respondents, and providing appropriate privacy disclosures on your forms. FormCraft AI acts as a data processor on your behalf.
+              As a form creator, you act as the data controller for information collected through your forms. You are responsible for ensuring that your data collection practices comply with applicable privacy laws (including GDPR and CCPA), obtaining necessary consents from respondents, and providing appropriate privacy disclosures on your forms. FormPoki Fat acts as a data processor on your behalf.
             </p>
           </section>
 
@@ -101,7 +101,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-3">10. Limitation of Liability</h2>
             <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              To the maximum extent permitted by law, FormCraft AI shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits, data, or goodwill arising out of or in connection with your use of the Service. Our total liability shall not exceed the amount you have paid us in the twelve (12) months preceding the claim.
+              To the maximum extent permitted by law, FormPoki Fat shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits, data, or goodwill arising out of or in connection with your use of the Service. Our total liability shall not exceed the amount you have paid us in the twelve (12) months preceding the claim.
             </p>
           </section>
 
@@ -130,7 +130,7 @@ export default function TermsOfServicePage() {
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-3">14. Contact</h2>
             <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
               For questions about these Terms, contact us at: <br />
-              <strong>Email:</strong> legal@formcraft.ai
+              <strong>Email:</strong> legal@formpokifat.ai
             </p>
           </section>
         </div>
@@ -138,3 +138,5 @@ export default function TermsOfServicePage() {
     </div>
   );
 }
+
+

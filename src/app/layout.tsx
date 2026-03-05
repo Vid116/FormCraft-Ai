@@ -15,20 +15,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FormCraft AI - Smart Form Builder",
+  title: "FormPoki Fat - Smart Form Builder",
   description:
     "Describe your form in plain English. AI builds it instantly with smart response insights.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   openGraph: {
-    title: "FormCraft AI - Smart Form Builder",
+    title: "FormPoki Fat - Smart Form Builder",
     description:
       "Describe your form in plain English. AI builds it instantly with smart response insights.",
     type: "website",
-    siteName: "FormCraft AI",
+    siteName: "FormPoki Fat",
   },
   twitter: {
     card: "summary_large_image",
-    title: "FormCraft AI - Smart Form Builder",
+    title: "FormPoki Fat - Smart Form Builder",
     description:
       "Describe your form in plain English. AI builds it instantly with smart response insights.",
   },
@@ -67,3 +67,4 @@ export default function RootLayout({
     </html>
   );
 }
+

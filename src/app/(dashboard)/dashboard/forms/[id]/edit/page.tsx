@@ -6,7 +6,7 @@ import { getUserPlan } from "@/lib/subscription";
 import type { Form } from "@/lib/types/form";
 
 export const metadata: Metadata = {
-  title: "Edit Form - FormCraft AI",
+  title: "Edit Form - FormPoki Fat",
 };
 
 export default async function EditFormPage({
@@ -32,3 +32,4 @@ export default async function EditFormPage({
 
   return <EditFormClient form={form as Form} plan={plan} />;
 }
+
