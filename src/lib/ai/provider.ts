@@ -6,6 +6,7 @@ interface AIProvider {
 }
 
 const DEFAULT_AI_TIMEOUT_MS = 45_000;
+const DEFAULT_OPENAI_COMPAT_TIMEOUT_MS = 110_000;
 const OPENAI_COMPAT_FORM_PROMPT = `Return ONLY valid JSON:
 {
   "title": "short title",
@@ -36,9 +37,10 @@ function getProviderMode(): string {
   return process.env.AI_PROVIDER ?? "sdk";
 }
 
-function getTimeoutMs(): number {
-  const raw = Number(process.env.AI_REQUEST_TIMEOUT_MS ?? DEFAULT_AI_TIMEOUT_MS);
-  if (!Number.isFinite(raw) || raw < 5_000) return DEFAULT_AI_TIMEOUT_MS;
+function getTimeoutMs(mode?: string): number {
+  const fallback = mode === "openai_compat" ? DEFAULT_OPENAI_COMPAT_TIMEOUT_MS : DEFAULT_AI_TIMEOUT_MS;
+  const raw = Number(process.env.AI_REQUEST_TIMEOUT_MS ?? fallback);
+  if (!Number.isFinite(raw) || raw < 5_000) return fallback;
   return Math.floor(raw);
 }
 
@@ -106,7 +108,7 @@ class AnthropicAPIProvider implements AIProvider {
   }
 
   async generate(prompt: string, systemPrompt: string): Promise<string> {
-    const timeoutMs = getTimeoutMs();
+    const timeoutMs = getTimeoutMs("api");
     const { controller, cleanup } = createTimeoutController(timeoutMs);
     let response: Response;
 
@@ -159,7 +161,7 @@ class OpenAICompatProvider implements AIProvider {
   }
 
   async generate(prompt: string, systemPrompt: string): Promise<string> {
-    const timeoutMs = getTimeoutMs();
+    const timeoutMs = getTimeoutMs("openai_compat");
     const { controller, cleanup } = createTimeoutController(timeoutMs);
     let response: Response;
 
