@@ -5,6 +5,28 @@ interface AIProvider {
   generate(prompt: string, systemPrompt: string): Promise<string>;
 }
 
+const DEFAULT_AI_TIMEOUT_MS = 45_000;
+
+function getProviderMode(): string {
+  return process.env.AI_PROVIDER ?? "sdk";
+}
+
+function getTimeoutMs(): number {
+  const raw = Number(process.env.AI_REQUEST_TIMEOUT_MS ?? DEFAULT_AI_TIMEOUT_MS);
+  if (!Number.isFinite(raw) || raw < 5_000) return DEFAULT_AI_TIMEOUT_MS;
+  return Math.floor(raw);
+}
+
+function createTimeoutController(timeoutMs: number): { controller: AbortController; cleanup: () => void } {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  return { controller, cleanup: () => clearTimeout(timeout) };
+}
+
+export function getAIProviderMode(): string {
+  return getProviderMode();
+}
+
 // --- DEV: Claude Code CLI Provider (uses your subscription via --print) ---
 class ClaudeCLIProvider implements AIProvider {
   async generate(prompt: string, systemPrompt: string): Promise<string> {
@@ -59,20 +81,34 @@ class AnthropicAPIProvider implements AIProvider {
   }
 
   async generate(prompt: string, systemPrompt: string): Promise<string> {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": this.apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 4096,
-        system: systemPrompt,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
+    const timeoutMs = getTimeoutMs();
+    const { controller, cleanup } = createTimeoutController(timeoutMs);
+    let response: Response;
+
+    try {
+      response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": this.apiKey,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 4096,
+          system: systemPrompt,
+          messages: [{ role: "user", content: prompt }],
+        }),
+        signal: controller.signal,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(`Anthropic API timeout after ${timeoutMs}ms`);
+      }
+      throw error;
+    } finally {
+      cleanup();
+    }
 
     if (!response.ok) {
       throw new Error(`Anthropic API error: ${response.status}`);
@@ -96,21 +132,35 @@ class OpenAICompatProvider implements AIProvider {
   }
 
   async generate(prompt: string, systemPrompt: string): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: this.model,
-        max_tokens: 4096,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: prompt },
-        ],
-      }),
-    });
+    const timeoutMs = getTimeoutMs();
+    const { controller, cleanup } = createTimeoutController(timeoutMs);
+    let response: Response;
+
+    try {
+      response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: this.model,
+          max_tokens: 4096,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: prompt },
+          ],
+        }),
+        signal: controller.signal,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(`OpenAI-compatible API timeout after ${timeoutMs}ms`);
+      }
+      throw error;
+    } finally {
+      cleanup();
+    }
 
     if (!response.ok) {
       throw new Error(`OpenAI-compatible API error: ${response.status}`);
@@ -140,7 +190,7 @@ class OpenAICompatProvider implements AIProvider {
 
 // --- Factory ---
 function getProvider(): AIProvider {
-  const mode = process.env.AI_PROVIDER ?? "sdk";
+  const mode = getProviderMode();
 
   if (mode === "api") {
     const key = process.env.ANTHROPIC_API_KEY;
@@ -174,16 +224,31 @@ export interface GeneratedForm {
 }
 
 export async function generateFormFromDescription(description: string): Promise<GeneratedForm> {
+  const startedAt = Date.now();
+  const mode = getProviderMode();
+  console.info(`[AI] generate_form start provider=${mode} prompt_chars=${description.length}`);
+
   const provider = getProvider();
-  const result = await provider.generate(description, FORM_GENERATION_PROMPT);
+  let result = "";
+  try {
+    result = await provider.generate(description, FORM_GENERATION_PROMPT);
+  } catch (error) {
+    const durationMs = Date.now() - startedAt;
+    console.error(`[AI] generate_form failed provider=${mode} duration_ms=${durationMs}`, error);
+    throw error;
+  }
 
   // Extract JSON object from the response
   const jsonMatch = result.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
+    const durationMs = Date.now() - startedAt;
+    console.error(`[AI] generate_form invalid_json provider=${mode} duration_ms=${durationMs} result_chars=${result.length}`);
     throw new Error("AI did not return valid JSON");
   }
 
   const parsed = JSON.parse(jsonMatch[0]);
+  const durationMs = Date.now() - startedAt;
+  console.info(`[AI] generate_form success provider=${mode} duration_ms=${durationMs} result_chars=${result.length}`);
 
   return {
     title: parsed.title ?? description.slice(0, 60),
@@ -199,11 +264,23 @@ export async function summarizeResponses(
   fields: FormField[],
   responses: FormResponse[]
 ): Promise<string> {
+  const startedAt = Date.now();
+  const mode = getProviderMode();
   const provider = getProvider();
 
   const prompt = `Form: "${formTitle}"
 Fields: ${JSON.stringify(fields.map((f) => ({ label: f.label, type: f.type })))}
 Responses (${responses.length} total): ${JSON.stringify(responses.slice(0, 50).map((r) => r.answers))}`;
 
-  return provider.generate(prompt, RESPONSE_SUMMARY_PROMPT);
+  console.info(`[AI] summarize start provider=${mode} form="${formTitle}" responses=${responses.length}`);
+  try {
+    const summary = await provider.generate(prompt, RESPONSE_SUMMARY_PROMPT);
+    const durationMs = Date.now() - startedAt;
+    console.info(`[AI] summarize success provider=${mode} duration_ms=${durationMs} summary_chars=${summary.length}`);
+    return summary;
+  } catch (error) {
+    const durationMs = Date.now() - startedAt;
+    console.error(`[AI] summarize failed provider=${mode} duration_ms=${durationMs}`, error);
+    throw error;
+  }
 }
