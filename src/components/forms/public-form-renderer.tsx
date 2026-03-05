@@ -342,7 +342,7 @@ export function PublicFormRenderer({
         }`}
       >
         <div
-          className={`w-full ${step === -1 ? "max-w-2xl" : "max-w-xl"} lg:scale-[1.2] lg:origin-center`}
+          className={`w-full ${step === -1 ? "max-w-2xl" : "max-w-xl"} lg:scale-[1.5] lg:origin-center`}
         >
 
           {/* ── Welcome screen ── */}
