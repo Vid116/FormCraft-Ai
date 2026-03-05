@@ -28,8 +28,8 @@ export function CookieConsent() {
   if (!mounted || !visible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4">
-      <div className="max-w-lg mx-auto bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pointer-events-none">
+      <div className="max-w-lg mx-auto bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 pointer-events-auto">
         <p className="text-sm text-zinc-600 dark:text-zinc-400 flex-1">
           We use essential cookies to keep you signed in. No tracking cookies.{" "}
           <Link href="/cookies" className="text-blue-600 hover:underline">

@@ -275,8 +275,8 @@ export function PublicFormRenderer({
   return (
     <div
       ref={containerRef}
-      className="relative min-h-[100svh] overflow-x-hidden overflow-y-auto overscroll-y-contain transition-all duration-1000 ease-out"
-      style={{ background: getGradient(progress, submitted), WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
+      className="relative min-h-[100svh] overflow-x-hidden transition-all duration-1000 ease-out"
+      style={{ background: getGradient(progress, submitted) }}
     >
       {/* Animated CSS */}
       <style>{formAnimationStyles}</style>
@@ -423,7 +423,7 @@ export function PublicFormRenderer({
               )}
 
               {/* Navigation — fixed at bottom on mobile for thumb reach */}
-              <div className="sticky bottom-[max(env(safe-area-inset-bottom),0px)] -mx-4 px-4 py-3 sm:mx-0 sm:px-0 sm:py-0 sm:static sm:relative flex items-center gap-4 z-40 bg-gradient-to-t from-black/35 via-black/15 to-transparent backdrop-blur-sm sm:bg-transparent sm:backdrop-blur-none sm:mt-0">
+              <div className="mt-8 flex items-center gap-4">
                 <button
                   onClick={goNext}
                   disabled={submitting}
@@ -494,7 +494,7 @@ export function PublicFormRenderer({
 
       {/* Branding on question screens — above the fixed nav on mobile */}
       {form.settings.show_branding && !submitted && step >= 0 && (
-        <div className="fixed bottom-[72px] sm:bottom-4 left-0 right-0 text-center">
+        <div className="pb-6 text-center">
           <span className="text-xs text-white/15">
             Powered by <span className="font-semibold">FormCraft AI</span>
           </span>
